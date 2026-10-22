@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/png" href="k-mark.png">
+<meta property="og:title" content="KOBRIX Punto de Venta">
+<meta property="og:description" content="Punto de venta para Windows: cobra con lector de cÃ³digo de barras, vende a granel y por mayoreo, controla inventario y haz cortes de caja. Funciona sin internet.">
+<meta property="og:image" content="2-venta.png">
+<meta name="theme-color" content="#000000">
+<title>KOBRIX Punto de Venta</title>
+<meta name="description" content="KOBRIX: punto de venta para Windows. Cobra con lector de código de barras, vende a granel y por mayoreo, controla inventario y haz cortes de caja. Funciona sin internet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Concepto: la página es el mostrador. Negro del programa, metal champán en los acentos,
+   la pantalla real como pieza central y un teclado de caja como momento firma. */
+:root {
+  color-scheme: dark;
+  --ink: #000000;        /* fondo, el mismo negro del programa */
+  --panel: #0a0b0d;      /* superficies */
+  --raise: #121317;      /* superficies elevadas */
+  --line: #24262c;       /* filos */
+  --line-hi: #34363d;
+  --text: #eceef1;
+  --mute: #a5a8b0;
+  --faint: #6e717a;
+  --gold: #e2c27d;       /* acento champán */
+  --gold-hi: #f3dfaf;
+  --gold-lo: #b3914f;
+  --gold-ink: #1a1306;
+  --g: 226, 194, 125;    /* el acento en RGB, para transparencias */
+  --ok: #5fd3a5;
+  --chrome: linear-gradient(180deg, #ffffff 0%, #e4e6ea 30%, #a9adb5 72%, #7d818a 100%);
+  --metal: linear-gradient(180deg, var(--gold-hi), var(--gold) 50%, var(--gold-lo));
+  --display: 'Michroma', 'Segoe UI', Arial, sans-serif;
+  --body: 'Inter', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  --wrap: 1180px;
+}
+/* Colores de acento: los mismos 5 de KOBRIX (Ajustes > Apariencia) */
+:root[data-accent="platino"] { --gold: #dfe3ea; --gold-hi: #ffffff; --gold-lo: #a3a9b4; --gold-ink: #0c0e12; --g: 223, 227, 234; }
+:root[data-accent="jade"] { --gold: #6edbb4; --gold-hi: #b7f3dc; --gold-lo: #3fa985; --gold-ink: #04170f; --g: 110, 219, 180; }
+:root[data-accent="zafiro"] { --gold: #8aaeff; --gold-hi: #c9d9ff; --gold-lo: #5a7fd6; --gold-ink: #050d22; --g: 138, 174, 255; }
+:root[data-accent="rubi"] { --gold: #ff8a98; --gold-hi: #ffc6cd; --gold-lo: #d45a6a; --gold-ink: #26060b; --g: 255, 138, 152; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+body { background: var(--ink); color: var(--text); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: rgba(0, 0, 0, 0.86); }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+
+.wrap { max-width: var(--wrap); margin: 0 auto; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.band { padding-block: clamp(72px, 10vw, 128px); }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); display: inline-flex; align-items: center; gap: 10px; }
+.eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--gold-lo); }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 400; }
+h2 { font-family: var(--display); font-size: clamp(26px, 3.4vw, 40px); line-height: 1.22; letter-spacing: 0.01em; }
+.lead { color: var(--mute); font-size: clamp(16px, 1.4vw, 18px); max-width: 60ch; margin: 0; }
+.sec-head { display: grid; gap: 18px; margin-bottom: clamp(36px, 5vw, 56px); }
+.sec-head.split { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: end; gap: 32px; }
+.chrome-text { background: var(--chrome); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gold-text { background: var(--metal); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* botones */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 24px; border-radius: 14px; font: 600 15px/1 var(--body); text-decoration: none; border: 1px solid var(--line-hi); background: var(--raise); color: var(--text); cursor: pointer; transition: transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s; white-space: nowrap; }
+.btn:hover { border-color: #4a4d55; background: #17181c; }
+.btn:active { transform: translateY(1px); }
+.btn.gold { background: var(--metal); color: var(--gold-ink); border-color: transparent; box-shadow: 0 10px 30px -10px rgba(var(--g), 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.btn.gold:hover { box-shadow: 0 14px 38px -10px rgba(var(--g), 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.55); }
+.btn.sm { height: 40px; padding: 0 16px; border-radius: 11px; font-size: 14px; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.kbd { font: 700 11px/1 var(--mono); padding: 4px 6px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.25); background: rgba(0, 0, 0, 0.12); letter-spacing: 0.04em; }
+.btn:not(.gold) .kbd { border-color: var(--line-hi); background: var(--panel); color: var(--mute); }
+
+/* encabezado */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+.top.scrolled { border-bottom-color: var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 28px; height: 70px; }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: none; }
+.brand img.k { height: 30px; width: auto; }
+.brand img.w { height: 15px; width: auto; }
+.nav { display: flex; gap: 4px; margin-left: auto; }
+.nav a { text-decoration: none; color: var(--mute); font-size: 14px; font-weight: 500; padding: 8px 12px; border-radius: 9px; transition: color 0.15s, background 0.15s; }
+.nav a:hover { color: var(--text); background: var(--raise); }
+.top .btn { flex: none; }
+
+/* portada */
+.hero { position: relative; padding-block: clamp(44px, 7vw, 88px) clamp(56px, 8vw, 104px); overflow: hidden; }
+.hero::before { content: ""; position: absolute; inset: -20% -10% auto; height: 760px; background: radial-gradient(ellipse 50% 45% at 72% 38%, rgba(var(--g), 0.13), transparent 70%), radial-gradient(ellipse 40% 40% at 20% 10%, rgba(255, 255, 255, 0.05), transparent 70%); pointer-events: none; }
+.hero .wrap { position: relative; display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: clamp(32px, 5vw, 64px); align-items: center; }
+.hero-copy { display: grid; gap: 26px; min-width: 0; }
+.hero h1 { font-family: var(--display); font-size: clamp(32px, 4.6vw, 58px); line-height: 1.12; letter-spacing: 0.005em; }
+.hero h1 .gold-text { display: inline; }
+.hero .lead { font-size: clamp(16px, 1.5vw, 19px); }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px 22px; padding: 0; margin: 4px 0 0; list-style: none; color: var(--mute); font-size: 14px; }
+.facts li { display: inline-flex; align-items: center; gap: 8px; }
+.facts li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(95, 211, 165, 0.15); }
+
+.screen { position: relative; min-width: 0; }
+.bezel { position: relative; border-radius: 18px; padding: 10px; background: linear-gradient(180deg, #2a2c31, #0d0e10 60%, #1c1d21); box-shadow: 0 50px 100px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.12); transform: perspective(1800px) rotateY(-7deg) rotateX(2deg); transform-origin: left center; transition: transform 0.6s cubic-bezier(.2, .7, .2, 1); }
+.screen:hover .bezel { transform: perspective(1800px) rotateY(-3deg) rotateX(1deg); }
+.bezel img { border-radius: 10px; width: 100%; height: auto; aspect-ratio: 1366 / 768; object-fit: cover; }
+.float-total { position: absolute; left: clamp(-28px, -2vw, -12px); bottom: -26px; padding: 16px 20px 14px; border-radius: 16px; background: rgba(10, 11, 13, 0.92); border: 1px solid var(--line-hi); backdrop-filter: blur(10px); box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.9); display: grid; gap: 2px; min-width: 210px; }
+.float-total .l { font-size: 12px; color: var(--mute); display: flex; justify-content: space-between; gap: 18px; }
+.float-total .v { font-family: var(--display); font-size: 30px; line-height: 1.2; }
+.float-total .s { font-size: 12px; color: var(--gold); }
+
+/* franja de datos */
+.strip { border-block: 1px solid var(--line); background: var(--panel); }
+.strip .wrap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.strip .cell { padding-block: 26px; padding-inline: 22px; display: grid; gap: 4px; border-left: 1px solid var(--line); }
+.strip .cell:first-child { border-left: 0; padding-left: 0; }
+.strip .n { font-family: var(--display); font-size: clamp(20px, 2.2vw, 26px); }
+.strip .t { color: var(--mute); font-size: 14px; }
+
+/* teclado de mostrador */
+.counter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); align-items: center; }
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 22px; border-radius: 22px; background: linear-gradient(180deg, #0f1013, #070708); border: 1px solid var(--line); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04); }
+.key { position: relative; aspect-ratio: 1 / 0.86; border-radius: 14px; border: 1px solid #2e3036; background: linear-gradient(180deg, #1d1e22, #121316); box-shadow: 0 5px 0 #050506, 0 6px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08); color: var(--text); font: 700 clamp(15px, 1.6vw, 19px)/1 var(--mono); cursor: pointer; display: grid; place-items: center; padding: 8px; transition: transform 0.08s, box-shadow 0.08s, border-color 0.15s; }
+.key small { position: absolute; left: 10px; bottom: 9px; font: 500 10.5px/1.2 var(--body); color: var(--faint); text-align: left; right: 8px; }
+.key:hover { border-color: #44474f; }
+.key[aria-pressed="true"] { transform: translateY(4px); box-shadow: 0 1px 0 #050506, 0 2px 6px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08); border-color: var(--gold-lo); }
+.key[aria-pressed="true"] span { background: var(--metal); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.key.wide { grid-column: span 2; aspect-ratio: auto; }
+.readout { border-radius: 20px; border: 1px solid var(--line); background: var(--panel); padding: 26px 26px 24px; display: grid; gap: 14px; min-height: 260px; align-content: start; }
+.readout .r-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--mute); }
+.readout .r-key { font-family: var(--display); font-size: clamp(38px, 5vw, 56px); line-height: 1.05; }
+.readout .r-title { font-size: 20px; font-weight: 600; }
+.readout .r-text { color: var(--mute); margin: 0; max-width: 46ch; }
+.readout .r-alt { font-size: 13px; color: var(--faint); font-family: var(--mono); }
+.bars { height: 4px; display: flex; gap: 3px; margin-top: 6px; }
+.bars i { flex: 1; background: var(--line); border-radius: 2px; }
+.bars i.on { background: var(--metal); }
+
+/* funciones */
+.features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+.feat { background: var(--ink); padding: 28px 26px 30px; display: grid; gap: 12px; align-content: start; transition: background 0.2s; min-width: 0; }
+.feat:hover { background: var(--panel); }
+.feat .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; border: 1px solid var(--line-hi); background: var(--raise); color: var(--gold); }
+.feat .ic svg { width: 20px; height: 20px; }
+.feat h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.005em; }
+.feat p { margin: 0; color: var(--mute); font-size: 14.5px; line-height: 1.6; }
+.feat code { font-family: var(--mono); font-size: 12.5px; color: var(--gold-hi); background: var(--raise); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; }
+
+/* recorrido por pantallas */
+.tour { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: clamp(24px, 3vw, 40px); align-items: start; }
+.tabs { display: grid; gap: 6px; }
+.tab { text-align: left; border: 1px solid transparent; background: transparent; color: var(--mute); padding: 14px 16px; border-radius: 14px; cursor: pointer; display: grid; gap: 3px; font-family: var(--body); transition: background 0.15s, border-color 0.15s, color 0.15s; }
+.tab b { font-size: 15px; font-weight: 600; color: var(--text); }
+.tab span { font-size: 13.5px; line-height: 1.5; }
+.tab:hover { background: var(--panel); }
+.tab[aria-selected="true"] { background: var(--raise); border-color: var(--line-hi); }
+.tab[aria-selected="true"] b { color: var(--gold-hi); }
+.viewer { border-radius: 18px; padding: 8px; background: linear-gradient(180deg, #24262b, #0c0d0f); border: 1px solid var(--line); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9); min-width: 0; }
+.viewer img { border-radius: 11px; width: 100%; height: auto; aspect-ratio: 1366 / 768; object-fit: cover; transition: opacity 0.25s; }
+.viewer .cap { display: flex; justify-content: space-between; gap: 16px; padding: 12px 8px 4px; color: var(--faint); font-size: 13px; }
+
+/* pasos */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; counter-reset: paso; }
+.step { position: relative; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); padding: 28px 26px; display: grid; gap: 12px; align-content: start; }
+.step .num { font-family: var(--display); font-size: 15px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gold-lo); color: var(--gold-hi); }
+.step h3 { font-size: 18px; font-weight: 600; }
+.step p { margin: 0; color: var(--mute); font-size: 14.5px; }
+.step .code { font-family: var(--mono); font-size: 13px; color: var(--text); background: var(--ink); border: 1px dashed var(--line-hi); border-radius: 10px; padding: 8px 12px; justify-self: start; letter-spacing: 0.06em; }
+
+/* licencia */
+.license { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.plan { border-radius: 22px; border: 1px solid var(--line); background: var(--panel); padding: 32px 30px; display: grid; gap: 18px; align-content: start; }
+.plan.pro { background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(var(--g), 0.12), transparent 60%), var(--panel); border-color: rgba(var(--g), 0.35); }
+.plan .tag { justify-self: start; font: 600 12px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line-hi); color: var(--mute); }
+.plan.pro .tag { color: var(--gold-ink); background: var(--metal); border-color: transparent; }
+.plan h3 { font-family: var(--display); font-size: clamp(22px, 2.4vw, 28px); line-height: 1.25; }
+.plan ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; color: var(--mute); font-size: 15px; }
+.plan li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; align-items: start; }
+.plan li svg { width: 18px; height: 18px; margin-top: 3px; color: var(--gold); }
+
+/* requisitos y preguntas */
+.two { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
+.reqs { border-radius: 20px; border: 1px solid var(--line); overflow: hidden; }
+.reqs .row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding: 16px 20px; border-top: 1px solid var(--line); font-size: 14.5px; }
+.reqs .row:first-child { border-top: 0; }
+.reqs .row dt { color: var(--faint); }
+.reqs .row dd { margin: 0; color: var(--text); }
+.faq { display: grid; gap: 10px; }
+.faq details { border-radius: 16px; border: 1px solid var(--line); background: var(--panel); transition: border-color 0.15s; }
+.faq details[open] { border-color: var(--line-hi); }
+.faq summary { list-style: none; cursor: pointer; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-weight: 600; font-size: 15.5px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font: 500 20px/1 var(--mono); color: var(--gold); transition: transform 0.2s; flex: none; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq .a { padding: 0 20px 18px; color: var(--mute); font-size: 14.5px; max-width: 68ch; }
+.faq .a p { margin: 0; }
+
+/* descarga */
+.dl { position: relative; border-radius: 28px; overflow: hidden; border: 1px solid rgba(var(--g), 0.3); background: radial-gradient(ellipse 60% 80% at 85% 50%, rgba(var(--g), 0.14), transparent 65%), linear-gradient(180deg, #0d0e11, #050506); }
+.dl-in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: clamp(28px, 4vw, 56px); padding: clamp(32px, 5vw, 60px); align-items: center; }
+.dl h2 { font-size: clamp(28px, 3.6vw, 44px); }
+.dl-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 13px/1 var(--mono); padding: 8px 11px; border-radius: 9px; border: 1px solid var(--line-hi); background: rgba(0, 0, 0, 0.4); color: var(--mute); }
+.chip b { color: var(--text); font-weight: 700; }
+.dl-copy { display: grid; gap: 22px; min-width: 0; }
+.dl-note { font-size: 13.5px; color: var(--faint); margin: 0; }
+.dl-note[data-tone="info"] { color: var(--gold-hi); }
+.news { border-radius: 18px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.5); padding: 22px 22px 20px; display: grid; gap: 12px; }
+.news .h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.news .h b { font-size: 14px; }
+.news ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--mute); }
+.news li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; }
+.news li::before { content: ""; width: 6px; height: 6px; margin-top: 8px; border-radius: 50%; background: var(--gold); }
+.news .kbd { color: var(--text); border-color: var(--line-hi); background: var(--raise); }
+
+/* selector de color (encabezado) */
+.dots { display: flex; gap: 6px; padding: 5px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); flex: none; }
+.dot { width: 18px; height: 18px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: var(--sw); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.4); transition: transform 0.15s, box-shadow 0.15s; }
+.dot:hover { transform: scale(1.12); }
+.dot[aria-pressed="true"] { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 2px var(--ink), 0 0 0 3.5px var(--gold); }
+
+/* sección de colores */
+.colors { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 4vw, 56px); align-items: center; }
+.swatches { display: grid; gap: 10px; }
+.swatch { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 16px; align-items: center; text-align: left; padding: 12px 16px 12px 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; font-family: var(--body); transition: border-color 0.15s, background 0.15s; }
+.swatch:hover { background: var(--raise); }
+.swatch .chip-c { width: 52px; height: 40px; border-radius: 11px; background: var(--sw); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -8px 14px rgba(0, 0, 0, 0.18); }
+.swatch b { display: block; font-size: 16px; font-weight: 600; }
+.swatch small { color: var(--faint); font: 500 12px/1.4 var(--mono); letter-spacing: 0.04em; }
+.swatch .tick { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line-hi); display: grid; place-items: center; color: transparent; }
+.swatch .tick svg { width: 14px; height: 14px; }
+.swatch[aria-pressed="true"] { border-color: rgba(var(--g), 0.55); background: radial-gradient(ellipse 70% 120% at 0% 50%, rgba(var(--g), 0.1), transparent 70%), var(--panel); }
+.swatch[aria-pressed="true"] .tick { background: var(--metal); border-color: transparent; color: var(--gold-ink); }
+.mock { border-radius: 20px; padding: 9px; background: linear-gradient(180deg, #2a2c31, #0d0e10 60%, #1c1d21); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06); min-width: 0; }
+.mock-in { border-radius: 13px; background: var(--ink); display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); overflow: hidden; }
+.m-left { border-right: 1px solid var(--line); min-width: 0; }
+.m-scan { margin: 14px; height: 42px; border-radius: 11px; border: 1px solid rgba(var(--g), 0.6); box-shadow: 0 0 0 3px rgba(var(--g), 0.1); display: flex; align-items: center; gap: 10px; padding: 0 12px; color: var(--faint); font-size: 13px; }
+.m-scan i { width: 14px; height: 14px; border: 2px solid var(--gold); border-radius: 3px; flex: none; }
+.m-row { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 14px; border-top: 1px solid var(--line); font-size: 13px; }
+.m-row .ind { width: 3px; height: 26px; border-radius: 2px; }
+.m-row.sel { background: var(--panel); }
+.m-row.sel .ind { background: var(--metal); }
+.m-row .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-row .sb { color: var(--faint); font-size: 11.5px; display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+.m-row .tt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.badge-a { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 6px; color: var(--gold-hi); background: rgba(var(--g), 0.12); border: 1px solid rgba(var(--g), 0.35); }
+.was { color: var(--faint); text-decoration: line-through; font-size: 11px; margin-right: 4px; }
+.acc { color: var(--gold); }
+.m-right { padding: 16px 16px 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.m-right .l { display: flex; justify-content: space-between; color: var(--mute); font-size: 12px; }
+.m-right .tot { font-family: var(--display); font-size: clamp(26px, 3vw, 34px); line-height: 1.15; }
+.m-right .sv { font-size: 12px; color: var(--gold); }
+.m-pay { margin-top: 6px; height: 46px; border-radius: 12px; background: var(--metal); color: var(--gold-ink); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-weight: 700; font-size: 15px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.m-pay .kbd { color: var(--gold-ink); }
+.m-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.m-acts span { border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font-size: 11.5px; color: var(--mute); display: flex; justify-content: space-between; gap: 6px; }
+.m-acts span em { font: 700 10px/1 var(--mono); font-style: normal; color: var(--faint); }
+.mock-cap { display: flex; justify-content: space-between; gap: 12px; padding: 11px 8px 3px; color: var(--faint); font-size: 13px; }
+
+/* guía ilustrada de instalación: una computadora dibujada, pantalla por pantalla */
+.guide { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: clamp(24px, 3vw, 44px); align-items: start; }
+.g-steps { display: grid; gap: 6px; }
+.g-step { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px; align-items: start; text-align: left; padding: 13px 14px; border-radius: 14px; border: 1px solid transparent; background: transparent; color: var(--mute); cursor: pointer; font-family: var(--body); transition: background 0.15s, border-color 0.15s; }
+.g-step .n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line-hi); font: 700 13px/1 var(--mono); color: var(--mute); }
+.g-step b { display: block; color: var(--text); font-size: 15px; font-weight: 600; }
+.g-step span.t { font-size: 13.5px; line-height: 1.5; }
+.g-step:hover { background: var(--panel); }
+.g-step[aria-selected="true"] { background: var(--raise); border-color: var(--line-hi); }
+.g-step[aria-selected="true"] .n { background: var(--metal); color: var(--gold-ink); border-color: transparent; }
+.g-step.done .n { border-color: rgba(var(--g), 0.5); color: var(--gold); }
+.g-view { display: grid; gap: 16px; min-width: 0; }
+.g-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.g-nav .pos { font: 500 13px/1 var(--mono); color: var(--faint); margin-right: auto; }
+.g-say { border-radius: 16px; border: 1px solid var(--line); background: var(--panel); padding: 16px 18px; display: grid; gap: 4px; }
+.g-say b { font-size: 16px; }
+.g-say p { margin: 0; color: var(--mute); font-size: 14.5px; max-width: 70ch; }
+.g-say .tip { color: var(--faint); font-size: 13px; }
+
+.pc { border-radius: 18px; padding: 10px; background: linear-gradient(180deg, #2a2c31, #0d0e10 60%, #1c1d21); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.pc-screen { container-type: inline-size; position: relative; aspect-ratio: 16 / 10; border-radius: 9px; overflow: hidden; background: radial-gradient(ellipse 70% 80% at 70% 30%, #2d4f86, transparent 70%), radial-gradient(ellipse 60% 70% at 15% 90%, #3b2c6b, transparent 70%), #101a33; }
+.scene { position: absolute; inset: 0 0 7% 0; font-size: 1.55cqw; color: #e9ecf2; font-family: 'Segoe UI', var(--body); }
+.scene[hidden] { display: none !important; }
+.taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 7%; background: rgba(20, 22, 30, 0.92); border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; gap: 1.4cqw; font-size: 1.3cqw; color: #cfd4de; }
+.taskbar .tb { width: 2.6cqw; height: 2.6cqw; border-radius: 0.5cqw; background: rgba(255, 255, 255, 0.08); display: grid; place-items: center; }
+.taskbar .tb.win { background: none; }
+.taskbar .tb.win i { display: grid; grid-template-columns: 1fr 1fr; gap: 0.18cqw; width: 1.6cqw; height: 1.6cqw; }
+.taskbar .tb.win i::before, .taskbar .tb.win i::after { content: ""; }
+.taskbar .clock { position: absolute; right: 1.6cqw; text-align: right; line-height: 1.25; font-size: 1.15cqw; }
+.wlogo { display: grid; grid-template-columns: 1fr 1fr; gap: 0.18cqw; width: 1.6cqw; height: 1.6cqw; }
+.wlogo s { background: #4cc2ff; display: block; }
+
+.win { position: absolute; border-radius: 0.6em; background: #202329; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 1.5em 3em rgba(0, 0, 0, 0.55); overflow: hidden; display: flex; flex-direction: column; }
+.titlebar { height: 2.2em; display: flex; align-items: center; gap: 0.6em; padding: 0 0.8em; background: #1b1d22; font-size: 0.85em; color: #c9ced8; flex: none; }
+.titlebar .ctl { margin-left: auto; display: flex; gap: 1.4em; color: #9aa1ad; letter-spacing: 0.1em; }
+.addr { display: flex; align-items: center; gap: 0.6em; padding: 0.5em 0.8em; border-bottom: 1px solid rgba(255, 255, 255, 0.07); font-size: 0.85em; color: #aab1bd; flex: none; }
+.addr .bar { flex: 1; height: 1.9em; border-radius: 1em; background: #2b2f37; display: flex; align-items: center; padding: 0 0.9em; color: #d6dbe4; white-space: nowrap; overflow: hidden; }
+.ex-body { display: grid; grid-template-columns: 22% minmax(0, 1fr); flex: 1; min-height: 0; }
+.ex-side { border-right: 1px solid rgba(255, 255, 255, 0.07); padding: 0.7em 0.5em; display: grid; gap: 0.25em; align-content: start; font-size: 0.85em; color: #aeb5c1; }
+.ex-side span { padding: 0.35em 0.6em; border-radius: 0.4em; display: flex; gap: 0.5em; align-items: center; }
+.ex-side span.on { background: #2f333c; color: #fff; }
+.ex-list { padding: 0.6em 0.8em; display: grid; gap: 0.2em; align-content: start; font-size: 0.9em; }
+.ex-head { display: grid; grid-template-columns: minmax(0, 1fr) 30% 16%; color: #8a919d; font-size: 0.85em; padding: 0.2em 0.6em 0.4em; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.file { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 30% 16%; align-items: center; padding: 0.45em 0.6em; border-radius: 0.4em; color: #dfe3ea; }
+.file .nm { display: flex; gap: 0.7em; align-items: center; white-space: nowrap; overflow: hidden; }
+.file .ty, .file .sz { color: #8f96a2; font-size: 0.9em; white-space: nowrap; }
+.file.sel { background: #2e4260; outline: 1px solid #4c6fa3; }
+.ic-f { width: 1.5em; height: 1.15em; border-radius: 0.15em; background: linear-gradient(180deg, #ffd56b, #e8b23a); position: relative; flex: none; }
+.ic-f::before { content: ""; position: absolute; left: 0; top: -0.22em; width: 45%; height: 0.32em; border-radius: 0.15em 0.15em 0 0; background: #e8b23a; }
+.ic-f.zip::after { content: ""; position: absolute; left: 44%; top: 0; width: 0.22em; height: 100%; background: repeating-linear-gradient(180deg, #6b5a2c 0 0.12em, #f4e3b0 0.12em 0.24em); }
+.ic-t { width: 1.15em; height: 1.45em; border-radius: 0.12em; background: #f3f5f8; position: relative; flex: none; }
+.ic-t::after { content: ""; position: absolute; left: 0.22em; right: 0.22em; top: 0.4em; height: 0.6em; background: repeating-linear-gradient(180deg, #9aa3b1 0 0.07em, transparent 0.07em 0.2em); }
+.ic-x { width: 1.5em; height: 1.5em; border-radius: 0.3em; background: #050505; border: 1px solid #3a3d44; display: grid; place-items: center; flex: none; }
+.ic-x img { width: 70%; height: 70%; object-fit: contain; }
+.menu { position: absolute; z-index: 3; min-width: 14em; border-radius: 0.6em; background: #2a2d34; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 1em 2.4em rgba(0, 0, 0, 0.6); padding: 0.35em; display: grid; gap: 0.1em; font-size: 0.9em; }
+.menu > span { padding: 0.5em 0.8em; border-radius: 0.35em; color: #dfe3ea; white-space: nowrap; position: relative; }
+.menu > span.hl { background: #3d4b63; color: #fff; }
+.menu hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 0.2em 0; }
+.wbtn { display: inline-flex; align-items: center; justify-content: center; padding: 0.55em 1.5em; border-radius: 0.4em; border: 1px solid rgba(255, 255, 255, 0.14); background: #2f333b; color: #e9ecf2; font-size: 0.9em; position: relative; white-space: nowrap; }
+.wbtn.pri { background: #4cc2ff; border-color: #4cc2ff; color: #06121c; font-weight: 600; }
+.cur { position: absolute; z-index: 5; width: 2.2em; height: 2.2em; pointer-events: none; }
+.cur svg { width: 100%; height: 100%; filter: drop-shadow(0 0.2em 0.3em rgba(0, 0, 0, 0.6)); }
+.cur::before { content: ""; position: absolute; left: -0.9em; top: -0.9em; width: 1.8em; height: 1.8em; border-radius: 50%; border: 0.15em solid var(--gold); animation: ping 1.6s ease-out infinite; }
+@keyframes ping { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+.cue { position: absolute; z-index: 6; background: var(--metal); color: var(--gold-ink); font: 700 0.85em/1 var(--body); padding: 0.55em 0.8em; border-radius: 0.5em; white-space: nowrap; box-shadow: 0 0.6em 1.4em rgba(0, 0, 0, 0.5); }
+.dlbubble { position: absolute; right: 2%; top: 13%; width: 36%; border-radius: 0.7em; background: #262930; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 1em 2.4em rgba(0, 0, 0, 0.6); padding: 0.9em; display: grid; gap: 0.6em; font-size: 0.9em; }
+.dlbubble .row { display: flex; gap: 0.8em; align-items: center; }
+.dlbubble .bar { height: 0.3em; border-radius: 0.2em; background: #4cc2ff; }
+.ss { position: absolute; inset: 8% 14% 6%; background: #0063b1; color: #fff; padding: 2.2em 2.6em; display: grid; gap: 1em; align-content: start; box-shadow: 0 1.5em 3em rgba(0, 0, 0, 0.5); }
+.ss h4 { margin: 0; font-size: 2.1em; font-weight: 300; }
+.ss p { margin: 0; font-size: 0.95em; line-height: 1.5; max-width: 40em; }
+.ss u { color: #fff; position: relative; }
+.ss .foot { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.1em 2.6em; display: flex; justify-content: flex-end; gap: 0.8em; background: rgba(0, 0, 0, 0.12); }
+.ss .wbtn { background: transparent; border: 0.15em solid #fff; color: #fff; border-radius: 0; }
+.inst { position: absolute; inset: 10% 18% 8%; border-radius: 0.4em; overflow: hidden; display: grid; grid-template-columns: 36% minmax(0, 1fr); background: #000; border: 1px solid #333; box-shadow: 0 1.5em 3em rgba(0, 0, 0, 0.6); }
+.inst .art { background: radial-gradient(ellipse at 50% 40%, #2a2318, #000 70%); display: grid; place-items: center; }
+.inst .art img { width: 46%; }
+.inst .tx { padding: 2em 2em 4.5em; display: grid; gap: 0.9em; align-content: start; position: relative; }
+.inst .tx h4 { margin: 0; font-size: 1.6em; font-weight: 600; }
+.inst .tx p { margin: 0; color: #c5c9d1; font-size: 0.9em; line-height: 1.5; }
+.inst .tx .foot { position: absolute; right: 1.2em; bottom: 1.1em; display: flex; gap: 0.6em; }
+.desk-icons { position: absolute; left: 2%; top: 4%; display: grid; gap: 1.4em; justify-items: center; }
+.dicon { width: 6.5em; display: grid; justify-items: center; gap: 0.35em; text-align: center; font-size: 0.85em; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); padding: 0.4em; border-radius: 0.4em; position: relative; }
+.dicon .ib { width: 3.3em; height: 3.3em; border-radius: 0.7em; display: grid; place-items: center; }
+.dicon.sel { background: rgba(120, 170, 255, 0.25); outline: 1px solid rgba(160, 200, 255, 0.5); }
+.open-app { position: absolute; inset: 12% 8% 6% 22%; border-radius: 0.6em; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 1.5em 3em rgba(0, 0, 0, 0.6); }
+.open-app img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+
+footer { border-top: 1px solid var(--line); padding-block: 40px 48px; color: var(--faint); font-size: 13.5px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; }
+footer .brand img.w { height: 13px; opacity: 0.85; }
+footer .tg { height: 9px; width: auto; opacity: 0.55; margin-top: 8px; }
+
+/* entrada suave: visible desde el inicio, solo sube unos píxeles */
+.rise { animation: rise 0.8s cubic-bezier(.2, .7, .2, 1) both; }
+.rise.d1 { animation-delay: 0.08s; } .rise.d2 { animation-delay: 0.16s; } .rise.d3 { animation-delay: 0.26s; }
+@keyframes rise { from { transform: translateY(14px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+
+@media (max-width: 1180px) {
+  .nav { display: none; }
+  .dots { margin-left: auto; }
+}
+@media (max-width: 1020px) {
+  .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .hero .wrap, .counter, .tour, .two, .dl-in, .license, .sec-head.split, .colors, .guide { grid-template-columns: minmax(0, 1fr); }
+  .g-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .g-step { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .g-step span.t { display: none; }
+  .bezel { transform: none; }
+  .screen:hover .bezel { transform: none; }
+  .float-total { left: 12px; }
+  .strip .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strip .cell:nth-child(3) { border-left: 0; padding-left: 0; }
+  .strip .cell:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tab span { display: none; }
+}
+@media (max-width: 560px) {
+  .features { grid-template-columns: minmax(0, 1fr); }
+  .keys { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; }
+  .key.wide { grid-column: span 2; }
+  .reqs .row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .brand img.w { display: none; }
+  .float-total { position: relative; left: 0; bottom: 0; margin-top: 14px; }
+  .btn { height: 48px; padding: 0 18px; }
+  .cta-row .btn { flex: 1 1 100%; }
+  .mock-in { grid-template-columns: minmax(0, 1fr); }
+  .g-step b { font-size: 13px; }
+  .g-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .g-step { padding: 10px 8px; }
+  .m-left { border-right: 0; border-bottom: 1px solid var(--line); }
+  .dots { gap: 4px; padding: 4px; }
+  .dot { width: 16px; height: 16px; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="KOBRIX, inicio">
+      <img class="k" src="k-mark.png" alt="">
+      <img class="w" src="wordmark.png" alt="KOBRIX">
+    </a>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#teclado">En el mostrador</a>
+      <a href="#funciones">Funciones</a>
+      <a href="#pantallas">Pantallas</a>
+      <a href="#colores">Colores</a>
+      <a href="#instalar">Cómo instalar</a>
+      <a href="#preguntas">Preguntas</a>
+    </nav>
+    <div class="dots" role="group" aria-label="Color de acento de la página">
+      <button type="button" class="dot" data-accent="champagne" style="--sw:linear-gradient(180deg,#f3dfaf,#e2c27d 50%,#b3914f)" title="Champán" aria-label="Champán"></button>
+      <button type="button" class="dot" data-accent="platino" style="--sw:linear-gradient(180deg,#ffffff,#dfe3ea 50%,#a3a9b4)" title="Platino" aria-label="Platino"></button>
+      <button type="button" class="dot" data-accent="jade" style="--sw:linear-gradient(180deg,#b7f3dc,#6edbb4 50%,#3fa985)" title="Jade" aria-label="Jade"></button>
+      <button type="button" class="dot" data-accent="zafiro" style="--sw:linear-gradient(180deg,#c9d9ff,#8aaeff 50%,#5a7fd6)" title="Zafiro" aria-label="Zafiro"></button>
+      <button type="button" class="dot" data-accent="rubi" style="--sw:linear-gradient(180deg,#ffc6cd,#ff8a98 50%,#d45a6a)" title="Rubí" aria-label="Rubí"></button>
+    </div>
+    <a class="btn gold sm" href="#descargar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      Descargar
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="inicio">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow rise">Punto de venta para Windows · versión 2.0.4</span>
+        <h1 class="rise d1"><span class="chrome-text">Cobra en segundos.</span> <span class="gold-text">Controla todo</span> <span class="chrome-text">tu negocio.</span></h1>
+        <p class="lead rise d2">KOBRIX es el punto de venta para abarrotes, tiendas y negocios de mostrador. Escaneas, cobras con una tecla e imprimes el ticket. Vende por pieza o a granel, aplica mayoreo solo, controla tu inventario y cierra la caja con un corte claro. Todo en tu computadora, sin internet.</p>
+        <div class="cta-row rise d3">
+          <a class="btn gold" href="#descargar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Descargar gratis por 15 días
+          </a>
+          <a class="btn" href="#pantallas">Ver el programa</a>
+        </div>
+        <ul class="facts rise d3">
+          <li>Funciona sin internet</li>
+          <li>Windows 7 a 11</li>
+          <li>Prueba con todas las funciones</li>
+        </ul>
+      </div>
+      <div class="screen rise d2">
+        <div class="bezel">
+          <img src="2-venta.png" alt="Pantalla de venta de KOBRIX con un ticket de seis productos, uno con precio de mayoreo y tres a granel" width="1366" height="768">
+        </div>
+        <div class="float-total" aria-hidden="true">
+          <span class="l"><span>Total a cobrar</span><span>Ticket #0001</span></span>
+          <span class="v chrome-text">$373.00</span>
+          <span class="s">Ahorro por mayoreo $18.00</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="strip" aria-label="KOBRIX en cifras">
+    <div class="wrap">
+      <div class="cell"><span class="n chrome-text">1 tecla</span><span class="t">para cobrar: F12, o Ctrl + Enter</span></div>
+      <div class="cell"><span class="n chrome-text">.5 = ½ kg</span><span class="t">venta a granel escribiendo el peso o el importe</span></div>
+      <div class="cell"><span class="n chrome-text">58 · 80 mm</span><span class="t">impresoras de tickets de Windows</span></div>
+      <div class="cell"><span class="n chrome-text">0 internet</span><span class="t">tus datos se quedan en tu computadora</span></div>
+    </div>
+  </section>
+
+  <section class="band" id="teclado">
+    <div class="wrap counter">
+      <div class="sec-head" style="margin-bottom:0">
+        <span class="eyebrow">Hecho para el mostrador</span>
+        <h2>Todo se hace con el teclado. Las manos nunca dejan la caja.</h2>
+        <p class="lead">Cada acción tiene su tecla y funciona desde cualquier pantalla. El lector de código de barras escribe, KOBRIX agrega el producto, y una tecla cobra. Toca una tecla para ver qué hace.</p>
+        <div class="keys" role="group" aria-label="Teclas de KOBRIX">
+          <button type="button" class="key" data-k="F12"><span>F12</span><small>Cobrar</small></button>
+          <button type="button" class="key" data-k="F2"><span>F2</span><small>En espera</small></button>
+          <button type="button" class="key" data-k="F10"><span>F10</span><small>Buscar</small></button>
+          <button type="button" class="key" data-k="F8"><span>F8</span><small>Corte</small></button>
+          <button type="button" class="key" data-k="F9"><span>F9</span><small>Art. común</small></button>
+          <button type="button" class="key" data-k="F3"><span>F3</span><small>Devolución</small></button>
+          <button type="button" class="key" data-k="plus"><span>+ −</span><small>Cantidad</small></button>
+          <button type="button" class="key" data-k="F5"><span>F5</span><small>Reimprimir</small></button>
+          <button type="button" class="key wide" data-k="mult"><span>6 * código</span><small>Varias piezas</small></button>
+          <button type="button" class="key wide" data-k="kg"><span>.5 · 250g</span><small>A granel</small></button>
+        </div>
+      </div>
+      <div class="readout" aria-live="polite">
+        <div class="r-top"><span id="r-cat">Tecla</span><span id="r-alt-top">KOBRIX 2.0.4</span></div>
+        <div class="r-key chrome-text" id="r-key">F12</div>
+        <div class="r-title" id="r-title">Cobrar</div>
+        <p class="r-text" id="r-text">Abre la ventana de cobro con el total, pide con cuánto paga el cliente y calcula el cambio. Ahí mismo F1 registra e imprime el ticket, F2 solo registra y F3 aplica un descuento.</p>
+        <div class="r-alt" id="r-alt">También: Ctrl + Enter</div>
+        <div class="bars" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="funciones" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head split">
+        <div style="display:grid;gap:18px">
+          <span class="eyebrow">Funciones</span>
+          <h2>Lo que tu negocio necesita, sin pagar extra por cada cosa.</h2>
+        </div>
+        <p class="lead">Una sola licencia por computadora incluye todo: venta, inventario, cortes, reportes, usuarios con permisos y tickets con tu logo.</p>
+      </div>
+      <div class="features">
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M5 7h14"/><path d="m5 7-3 7a4 4 0 0 0 6 0Z"/><path d="m19 7-3 7a4 4 0 0 0 6 0Z"/><path d="M8 21h8"/></svg></div>
+          <h3>Venta a granel</h3>
+          <p>Escribe <code>.5</code> para medio kilo o <code>250g</code>. O el importe: “deme 20 pesos de queso” y KOBRIX calcula el peso.</p>
+        </article>
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></div>
+          <h3>Mayoreo automático</h3>
+          <p>Marca desde cuántas piezas o kilos aplica el precio de mayoreo. En la venta se aplica solo y el ticket muestra el ahorro.</p>
+        </article>
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <h3>Ventas en espera</h3>
+          <p>Un cliente fue por algo más: F2 guarda su venta, cobras al siguiente y con F2 regresas a ella. Nada se pierde.</p>
+        </article>
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3.5"/><path d="M12 8.5V7M15.5 12H17"/><path d="M7 20v1.5M17 20v1.5"/></svg></div>
+          <h3>Cortes de caja</h3>
+          <p>Fondo inicial, ventas por forma de pago, entradas, salidas y diferencia. Corte parcial sin cerrar la caja e impresión en ticket.</p>
+        </article>
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <h3>Permisos por cajero</h3>
+          <p>Decide quién cambia precios, da descuentos o cancela. Si no tiene permiso, KOBRIX pide tu PIN en el momento y lo anota en la bitácora.</p>
+        </article>
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div>
+          <h3>Inventario y caducidades</h3>
+          <p>Existencias que bajan con cada venta, aviso de stock bajo y de productos próximos a caducar en lácteos, pan y embutidos.</p>
+        </article>
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg></div>
+          <h3>Reportes en Excel</h3>
+          <p>Lo vendido por día o por rango de fechas, separado en piezas y kilos. Cada ticket, cada producto, devoluciones y cortes.</p>
+        </article>
+        <article class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7Z"/></svg></div>
+          <h3>Tickets con tu logo</h3>
+          <p>Imprime en cualquier impresora térmica de 58 u 80 mm instalada en Windows, con el logo y los datos de tu negocio.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="pantallas" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Pantallas</span>
+        <h2>Negro, claro y sin distracciones. Así se ve KOBRIX.</h2>
+      </div>
+      <div class="tour">
+        <div class="tabs" role="tablist" aria-label="Pantallas de KOBRIX">
+          <button type="button" class="tab" role="tab" id="t-venta" aria-selected="true" aria-controls="viewer" data-img="2-venta.png" data-cap="Venta · Mayoreo, granel y venta por importe en el mismo ticket"><b>Venta</b><span>Escanea, ajusta cantidades y cobra.</span></button>
+          <button type="button" class="tab" role="tab" id="t-cobro" aria-selected="false" aria-controls="viewer" data-img="3-cobro-descuento.png" data-cap="Cobro · Efectivo, tarjeta o transferencia, con descuento"><b>Cobro y descuentos</b><span>Cambio exacto y descuento por monto o %.</span></button>
+          <button type="button" class="tab" role="tab" id="t-panel" aria-selected="false" aria-controls="viewer" data-img="1-panel.png" data-cap="Panel · Ventas de 14 días, horario pico y más vendidos"><b>Panel del dueño</b><span>Cómo va tu negocio de un vistazo.</span></button>
+          <button type="button" class="tab" role="tab" id="t-dia" aria-selected="false" aria-controls="viewer" data-img="7-ventas-del-dia.png" data-cap="Ventas del día · Filtra por cajero y revisa cada ticket"><b>Ventas del día</b><span>Cada ticket con hora, cajero y pago.</span></button>
+          <button type="button" class="tab" role="tab" id="t-perm" aria-selected="false" aria-controls="viewer" data-img="5-permisos.png" data-cap="Usuarios · Permisos por cajero y límite de descuento"><b>Permisos</b><span>Qué puede hacer cada cajero.</span></button>
+          <button type="button" class="tab" role="tab" id="t-auth" aria-selected="false" aria-controls="viewer" data-img="4-autorizacion.png" data-cap="Autorización · El administrador autoriza con su PIN"><b>Autorización</b><span>Tu PIN sin cerrar la sesión del cajero.</span></button>
+          <button type="button" class="tab" role="tab" id="t-desem" aria-selected="false" aria-controls="viewer" data-img="6-desempeno.png" data-cap="Desempeño · Ventas, descuentos y devoluciones por cajero"><b>Desempeño</b><span>Lo que vendió cada cajero.</span></button>
+          <button type="button" class="tab" role="tab" id="t-cad" aria-selected="false" aria-controls="viewer" data-img="9-caducidad.png" data-cap="Inventario · Productos por caducar y stock bajo"><b>Caducidades</b><span>Avisos antes de que caduquen.</span></button>
+        </div>
+        <figure class="viewer" id="viewer" role="tabpanel" aria-labelledby="t-venta" style="margin:0">
+          <img id="viewer-img" src="2-venta.png" alt="Pantalla de KOBRIX" width="1366" height="768">
+          <figcaption class="cap"><span id="viewer-cap">Venta · Mayoreo, granel y venta por importe en el mismo ticket</span><span>Captura real</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="colores" style="padding-top:0">
+    <div class="wrap colors">
+      <div style="display:grid;gap:24px;min-width:0">
+        <div class="sec-head" style="margin-bottom:0">
+          <span class="eyebrow">Colores</span>
+          <h2>Elige el color de tu caja.</h2>
+          <p class="lead">La interfaz siempre es negra. El color de acento pinta los botones, la selección y las cifras destacadas. KOBRIX trae cinco y se cambian en Ajustes &gt; Apariencia. Pruébalos aquí: toda la página cambia contigo.</p>
+        </div>
+        <div class="swatches" role="group" aria-label="Colores de acento">
+          <button type="button" class="swatch" data-accent="champagne" style="--sw:linear-gradient(180deg,#f3dfaf,#e2c27d 50%,#b3914f)"><span class="chip-c"></span><span><b>Champán</b><small>#E2C27D · el de fábrica</small></span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></button>
+          <button type="button" class="swatch" data-accent="platino" style="--sw:linear-gradient(180deg,#ffffff,#dfe3ea 50%,#a3a9b4)"><span class="chip-c"></span><span><b>Platino</b><small>#DFE3EA · sobrio y elegante</small></span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></button>
+          <button type="button" class="swatch" data-accent="jade" style="--sw:linear-gradient(180deg,#b7f3dc,#6edbb4 50%,#3fa985)"><span class="chip-c"></span><span><b>Jade</b><small>#6EDBB4 · fresco</small></span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></button>
+          <button type="button" class="swatch" data-accent="zafiro" style="--sw:linear-gradient(180deg,#c9d9ff,#8aaeff 50%,#5a7fd6)"><span class="chip-c"></span><span><b>Zafiro</b><small>#8AAEFF · tranquilo</small></span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></button>
+          <button type="button" class="swatch" data-accent="rubi" style="--sw:linear-gradient(180deg,#ffc6cd,#ff8a98 50%,#d45a6a)"><span class="chip-c"></span><span><b>Rubí</b><small>#FF8A98 · con carácter</small></span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></button>
+        </div>
+      </div>
+      <figure class="mock" style="margin:0">
+        <div class="mock-in" aria-label="Muestra de la pantalla de venta con el color elegido">
+          <div class="m-left">
+            <div class="m-scan"><i></i>Escanea el código de barras…</div>
+            <div class="m-row"><span class="ind"></span><div style="min-width:0"><div class="nm">Coca-Cola 600 ml</div><div class="sb">7501055300846 <span class="badge-a">Mayoreo</span></div></div><span class="tt"><span class="was">$18.00</span><span class="acc">$90.00</span></span></div>
+            <div class="m-row"><span class="ind"></span><div style="min-width:0"><div class="nm">Queso Oaxaca</div><div class="sb">A granel · 0.125 kg</div></div><span class="tt">$20.00</span></div>
+            <div class="m-row"><span class="ind"></span><div style="min-width:0"><div class="nm">Sabritas Original 45 g</div><div class="sb">2 pzs</div></div><span class="tt">$38.00</span></div>
+            <div class="m-row sel"><span class="ind"></span><div style="min-width:0"><div class="nm">Pan Bimbo Blanco Grande</div><div class="sb">3 pzs · seleccionado</div></div><span class="tt">$156.00</span></div>
+          </div>
+          <div class="m-right">
+            <div class="l"><span>Total a cobrar</span><span>Ticket #0001</span></div>
+            <div class="tot chrome-text">$304.00</div>
+            <div class="sv">Ahorro por mayoreo $18.00</div>
+            <div class="m-pay"><span>Cobrar</span><span class="kbd">F12</span></div>
+            <div class="m-acts"><span>Buscar <em>F10</em></span><span>En espera <em>F2</em></span><span>Común <em>F9</em></span><span>Corte <em>F8</em></span></div>
+          </div>
+        </div>
+        <figcaption class="mock-cap"><span>Así se ve la venta en <b id="acc-name" style="color:var(--gold)">Champán</b></span><span>Muestra</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band" id="empezar" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Cómo empezar</span>
+        <h2>Vendiendo en menos de diez minutos.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="num">1</span>
+          <h3>Descarga e instala</h3>
+          <p>Abre el instalador. No pide permisos de administrador y deja el acceso directo en el escritorio. Si ya tenías KOBRIX, tus datos se conservan.</p>
+        </div>
+        <div class="step">
+          <span class="num">2</span>
+          <h3>Configura tu negocio</h3>
+          <p>Un asistente pide el nombre del negocio, el administrador con su PIN de 4 a 6 números y tus cajeros. Registra tus productos escaneándolos.</p>
+        </div>
+        <div class="step">
+          <span class="num">3</span>
+          <h3>Activa tu licencia</h3>
+          <p>Prueba 15 días con todo. Para activar, manda el código de tu equipo a tu distribuidor y pega la licencia que te devuelve.</p>
+          <span class="code">ABCD-EFGH-JKLM</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="licencia" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head split">
+        <div style="display:grid;gap:18px">
+          <span class="eyebrow">Licencia</span>
+          <h2>Pruébalo completo. Actívalo cuando estés listo.</h2>
+        </div>
+        <p class="lead">La licencia se activa una sola vez por computadora y no se puede copiar a otra. Si cambias de equipo, la quitas de uno y la activas en el nuevo.</p>
+      </div>
+      <div class="license">
+        <div class="plan">
+          <span class="tag">Prueba</span>
+          <h3>15 días con todas las funciones</h3>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Vende, imprime tickets y haz cortes desde el primer día.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Sin tarjeta ni registro en internet.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Lo que registres en la prueba se queda al activar.</span></li>
+          </ul>
+          <a class="btn" href="#descargar" style="justify-self:start">Descargar la prueba</a>
+        </div>
+        <div class="plan pro">
+          <span class="tag">KOBRIX Pro</span>
+          <h3>Licencia por computadora</h3>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Todas las funciones, sin módulos extra.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Todos los cajeros que necesites, cada uno con sus permisos.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Actualizaciones que conservan tus ventas, productos y licencia.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Protegida con firma digital: nadie puede copiar tu licencia.</span></li>
+          </ul>
+          <span style="color:var(--mute);font-size:14px">Pide tu licencia a quien te vendió KOBRIX.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="preguntas" style="padding-top:0">
+    <div class="wrap two">
+      <div style="display:grid;gap:24px;min-width:0">
+        <div class="sec-head" style="margin-bottom:0">
+          <span class="eyebrow">Requisitos</span>
+          <h2>Funciona en la computadora que ya tienes.</h2>
+        </div>
+        <dl class="reqs" style="margin:0">
+          <div class="row"><dt>Sistema</dt><dd>Windows 7 SP1, 8, 10 y 11</dd></div>
+          <div class="row"><dt>Procesador</dt><dd>32 o 64 bits. Modo compatible para equipos antiguos</dd></div>
+          <div class="row"><dt>Internet</dt><dd>No se necesita para vender</dd></div>
+          <div class="row"><dt>Impresora</dt><dd>De tickets de 58 u 80 mm con su controlador de Windows</dd></div>
+          <div class="row"><dt>Lector</dt><dd>Cualquier lector USB que escriba como teclado</dd></div>
+          <div class="row"><dt>Espacio</dt><dd>Unos 180 MB instalado</dd></div>
+        </dl>
+      </div>
+      <div style="display:grid;gap:24px;min-width:0">
+        <div class="sec-head" style="margin-bottom:0">
+          <span class="eyebrow">Preguntas</span>
+          <h2>Lo que más nos preguntan.</h2>
+        </div>
+        <div class="faq">
+          <details open>
+            <summary>¿Necesito internet para vender?</summary>
+            <div class="a"><p>No. KOBRIX guarda todo en tu computadora: ventas, productos, usuarios y cortes. Solo necesitas internet para descargarlo.</p></div>
+          </details>
+          <details>
+            <summary>¿Qué pasa si se descompone la computadora?</summary>
+            <div class="a"><p>KOBRIX hace una copia automática cada día. Además, en Ajustes > Respaldos guardas un respaldo completo en una memoria USB y lo restauras en otra computadora.</p></div>
+          </details>
+          <details>
+            <summary>En mi laptop F12 sube el volumen. ¿Cómo cobro?</summary>
+            <div class="a"><p>Mantén presionada la tecla Fn (Fn + F12) o activa el bloqueo Fn, que en muchas laptops es Fn + Esc. También puedes cobrar con Ctrl + Enter, buscar con Ctrl + B y reimprimir con Ctrl + P.</p></div>
+          </details>
+          <details>
+            <summary>¿Funciona con mi impresora de tickets y mi lector?</summary>
+            <div class="a"><p>Sí, si tu impresora está instalada en Windows (POS-58, Epson TM-T20 y similares) y tu lector es USB tipo teclado, como casi todos. En Ajustes puedes imprimir una prueba y probar el lector.</p></div>
+          </details>
+          <details>
+            <summary>¿Mis cajeros pueden hacer el corte?</summary>
+            <div class="a"><p>Sí. Cualquier usuario hace e imprime el corte de caja. Tú decides si el cajero puede ver cuánto efectivo debería haber, para que cuente a ciegas.</p></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="instalar" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head split">
+        <div style="display:grid;gap:18px">
+          <span class="eyebrow">Cómo instalar</span>
+          <h2>De la descarga a tu primera venta, pantalla por pantalla.</h2>
+        </div>
+        <p class="lead">KOBRIX se descarga en un archivo comprimido (.zip). Windows ya trae cómo abrirlo: no necesitas instalar WinRAR ni nada más. Sigue los pasos y mira en la pantalla dónde dar clic.</p>
+      </div>
+      <div class="guide">
+        <div class="g-steps" role="tablist" aria-label="Pasos para instalar KOBRIX">
+          <button type="button" class="g-step" role="tab" aria-selected="true"><span class="n">1</span><span><b>Descarga</b><span class="t">Baja KOBRIX.zip desde esta página.</span></span></button>
+          <button type="button" class="g-step" role="tab" aria-selected="false"><span class="n">2</span><span><b>Extraer todo</b><span class="t">Clic derecho en el archivo descargado.</span></span></button>
+          <button type="button" class="g-step" role="tab" aria-selected="false"><span class="n">3</span><span><b>Extraer</b><span class="t">Confirma la carpeta y pulsa Extraer.</span></span></button>
+          <button type="button" class="g-step" role="tab" aria-selected="false"><span class="n">4</span><span><b>Abrir instalador</b><span class="t">Doble clic en KOBRIX-Instalador-2.0.4.</span></span></button>
+          <button type="button" class="g-step" role="tab" aria-selected="false"><span class="n">5</span><span><b>Aviso de Windows</b><span class="t">Más información y Ejecutar de todas formas.</span></span></button>
+          <button type="button" class="g-step" role="tab" aria-selected="false"><span class="n">6</span><span><b>Instalar</b><span class="t">Siguiente, Instalar y Terminar.</span></span></button>
+          <button type="button" class="g-step" role="tab" aria-selected="false"><span class="n">7</span><span><b>¡Listo!</b><span class="t">Abre KOBRIX desde el escritorio.</span></span></button>
+        </div>
+        <div class="g-view">
+          <div class="pc" role="tabpanel" aria-label="Ilustración del paso">
+            <div class="pc-screen">
+
+              <div class="scene" data-scene="0">
+                <div class="win" style="inset:5% 4% 4% 4%">
+                  <div class="titlebar"><span style="background:#2b2f37;padding:0.35em 1em;border-radius:0.5em 0.5em 0 0">KOBRIX Punto de Venta</span><span class="ctl">—&nbsp;&nbsp;▢&nbsp;&nbsp;✕</span></div>
+                  <div class="addr"><span>←&nbsp;→&nbsp;⟳</span><span class="bar">🔒&nbsp;tunegocio.github.io/kobrix</span></div>
+                  <div style="flex:1;background:#000;display:grid;align-content:center;justify-items:start;gap:1.1em;padding:0 8%">
+                    <span style="font:0.8em var(--mono);color:var(--gold);letter-spacing:0.15em">DESCARGA</span>
+                    <span style="font-family:var(--display);font-size:2.3em;line-height:1.2" class="chrome-text">KOBRIX 2.0.4<br>para Windows</span>
+                    <span style="display:inline-flex;gap:0.6em;align-items:center;background:var(--metal);color:var(--gold-ink);font-weight:700;padding:0.9em 1.5em;border-radius:0.7em;position:relative">⭳ Descargar KOBRIX 2.0.4<span class="cur" style="left:70%;top:55%"><svg viewBox="0 0 24 24"><path d="M5 2l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></span></span>
+                  </div>
+                </div>
+                <div class="dlbubble">
+                  <b>Descargas recientes</b>
+                  <div class="row"><span class="ic-f zip"></span><span style="flex:1"><b>KOBRIX.zip</b><br><span style="color:#9aa1ad;font-size:0.9em">61 MB · Completado</span></span></div>
+                  <div class="bar"></div>
+                  <span style="color:#4cc2ff;font-size:0.9em">Mostrar en la carpeta</span>
+                </div>
+                <span class="cue" style="left:34%;top:76%">Clic en Descargar</span>
+              </div>
+
+              <div class="scene" data-scene="1" hidden>
+                <div class="win" style="inset:5% 6% 4% 6%">
+                  <div class="titlebar"><span>📁&nbsp;Descargas</span><span class="ctl">—&nbsp;&nbsp;▢&nbsp;&nbsp;✕</span></div>
+                  <div class="addr"><span>←&nbsp;→&nbsp;↑</span><span class="bar">Este equipo&nbsp;›&nbsp;Descargas</span></div>
+                  <div class="ex-body">
+                    <div class="ex-side"><span>🖥 Escritorio</span><span class="on">⭳ Descargas</span><span>📄 Documentos</span><span>🖼 Imágenes</span><span>💻 Este equipo</span></div>
+                    <div class="ex-list">
+                      <div class="ex-head"><span>Nombre</span><span>Tipo</span><span>Tamaño</span></div>
+                      <div class="file sel"><span class="nm"><span class="ic-f zip"></span>KOBRIX.zip</span><span class="ty">Carpeta comprimida</span><span class="sz">62,097 KB</span></div>
+                      <div class="file"><span class="nm"><span class="ic-t"></span>lista de precios.txt</span><span class="ty">Documento de texto</span><span class="sz">3 KB</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="menu" style="left:34%;top:33%">
+                  <span>Abrir</span>
+                  <span>Abrir en una ventana nueva</span>
+                  <span class="hl">Extraer todo…<span class="cur" style="left:55%;top:40%"><svg viewBox="0 0 24 24"><path d="M5 2l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></span></span>
+                  <hr>
+                  <span>Compartir</span>
+                  <span>Copiar</span>
+                  <span>Eliminar</span>
+                  <hr>
+                  <span>Propiedades</span>
+                </div>
+                <span class="cue" style="left:62%;top:42%">Clic derecho › Extraer todo</span>
+              </div>
+
+              <div class="scene" data-scene="2" hidden>
+                <div class="win" style="inset:12% 16% 10% 16%">
+                  <div class="titlebar"><span>Extraer carpetas comprimidas (en zip)</span><span class="ctl">✕</span></div>
+                  <div style="flex:1;padding:1.6em 2em;display:grid;gap:1em;align-content:start">
+                    <span style="font-size:1.35em;color:#9fd3ff">Seleccionar un destino y extraer archivos</span>
+                    <span style="font-size:0.9em;color:#c5cad3">Los archivos se extraerán en esta carpeta:</span>
+                    <div style="display:flex;gap:0.6em"><span class="bar" style="flex:1;height:2.2em;border-radius:0.3em;background:#2b2f37;border:1px solid #4b5160;display:flex;align-items:center;padding:0 0.8em;font-size:0.9em;white-space:nowrap;overflow:hidden">C:\Users\TuNombre\Downloads\KOBRIX</span><span class="wbtn">Examinar…</span></div>
+                    <span style="display:flex;gap:0.6em;align-items:center;font-size:0.9em"><span style="width:1.1em;height:1.1em;border-radius:0.2em;background:#4cc2ff;color:#06121c;display:grid;place-items:center;font-size:0.8em;font-weight:700">✓</span>Mostrar los archivos extraídos al terminar</span>
+                  </div>
+                  <div style="display:flex;justify-content:flex-end;gap:0.7em;padding:1em 1.4em;background:#1b1d22">
+                    <span class="wbtn pri">Extraer<span class="cur" style="left:60%;top:50%"><svg viewBox="0 0 24 24"><path d="M5 2l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></span></span>
+                    <span class="wbtn">Cancelar</span>
+                  </div>
+                </div>
+                <span class="cue" style="left:52%;top:80%">Clic en Extraer</span>
+              </div>
+
+              <div class="scene" data-scene="3" hidden>
+                <div class="win" style="inset:5% 6% 4% 6%">
+                  <div class="titlebar"><span>📁&nbsp;KOBRIX</span><span class="ctl">—&nbsp;&nbsp;▢&nbsp;&nbsp;✕</span></div>
+                  <div class="addr"><span>←&nbsp;→&nbsp;↑</span><span class="bar">Descargas&nbsp;›&nbsp;KOBRIX&nbsp;›&nbsp;KOBRIX</span></div>
+                  <div class="ex-body">
+                    <div class="ex-side"><span>🖥 Escritorio</span><span class="on">⭳ Descargas</span><span>📄 Documentos</span><span>🖼 Imágenes</span><span>💻 Este equipo</span></div>
+                    <div class="ex-list">
+                      <div class="ex-head"><span>Nombre</span><span>Tipo</span><span>Tamaño</span></div>
+                      <div class="file"><span class="nm"><span class="ic-f"></span>Capturas</span><span class="ty">Carpeta de archivos</span><span class="sz"></span></div>
+                      <div class="file"><span class="nm"><span class="ic-t"></span>CAMBIOS-2.0.4.txt</span><span class="ty">Documento de texto</span><span class="sz">4 KB</span></div>
+                      <div class="file sel"><span class="nm"><span class="ic-x"><img src="k-mark.png" alt=""></span><b>KOBRIX-Instalador-2.0.4</b></span><span class="ty">Aplicación</span><span class="sz">60,698 KB</span><span class="cur" style="left:30%;top:55%"><svg viewBox="0 0 24 24"><path d="M5 2l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></span></div>
+                      <div class="file"><span class="nm"><span class="ic-t"></span>LEEME.txt</span><span class="ty">Documento de texto</span><span class="sz">8 KB</span></div>
+                    </div>
+                  </div>
+                </div>
+                <span class="cue" style="left:40%;top:62%">Doble clic para instalar</span>
+              </div>
+
+              <div class="scene" data-scene="4" hidden>
+                <div class="ss">
+                  <h4>Windows protegió su PC</h4>
+                  <p>Microsoft Defender SmartScreen impidió el inicio de una aplicación no reconocida. Si ejecutas esta aplicación, podrías poner en riesgo tu PC.</p>
+                  <p><u>Más información</u></p>
+                  <p style="opacity:0.85">Aplicación: KOBRIX-Instalador-2.0.4.exe<br>Editor: Editor desconocido</p>
+                  <div class="foot">
+                    <span class="wbtn">Ejecutar de todas formas<span class="cur" style="left:60%;top:55%"><svg viewBox="0 0 24 24"><path d="M5 2l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></span></span>
+                    <span class="wbtn">No ejecutar</span>
+                  </div>
+                </div>
+                <span class="cue" style="left:30%;top:37%">1 · Clic en Más información</span>
+                <span class="cue" style="left:46%;top:73%">2 · Ejecutar de todas formas</span>
+              </div>
+
+              <div class="scene" data-scene="5" hidden>
+                <div class="inst">
+                  <div class="art"><img src="k-mark.png" alt=""></div>
+                  <div class="tx">
+                    <h4>Bienvenido a KOBRIX</h4>
+                    <p>Se instalará KOBRIX Punto de Venta 2.0.4 en esta computadora.</p>
+                    <p>Si ya tenías KOBRIX instalado, tus ventas, productos y usuarios se conservan.</p>
+                    <p>Haz clic en Siguiente para continuar.</p>
+                    <div class="foot"><span class="wbtn pri">Siguiente &gt;<span class="cur" style="left:60%;top:50%"><svg viewBox="0 0 24 24"><path d="M5 2l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></span></span><span class="wbtn">Cancelar</span></div>
+                  </div>
+                </div>
+                <span class="cue" style="left:56%;top:85%">Siguiente › Instalar › Terminar</span>
+              </div>
+
+              <div class="scene" data-scene="6" hidden>
+                <div class="desk-icons">
+                  <div class="dicon"><span class="ib" style="background:rgba(255,255,255,0.1)">🗑</span>Papelera</div>
+                  <div class="dicon sel"><span class="ib" style="background:#050505;border:1px solid #3a3d44"><img src="k-mark.png" alt="" style="width:62%"></span>KOBRIX<span class="cur" style="left:62%;top:45%"><svg viewBox="0 0 24 24"><path d="M5 2l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></span></div>
+                </div>
+                <div class="open-app"><img src="2-venta.png" alt="KOBRIX abierto en la pantalla de venta"></div>
+                <span class="cue" style="left:3%;top:45%">Doble clic en KOBRIX</span>
+              </div>
+
+              <div class="taskbar" aria-hidden="true">
+                <span class="tb win"><span class="wlogo"><s></s><s></s><s></s><s></s></span></span>
+                <span class="tb">🔍</span><span class="tb">📁</span><span class="tb">🌐</span>
+                <span class="clock">10:30 a. m.<br>22/10/2026</span>
+              </div>
+            </div>
+          </div>
+          <div class="g-say" aria-live="polite">
+            <b id="g-title">1. Descarga KOBRIX</b>
+            <p id="g-text">Da clic en “Descargar KOBRIX 2.0.4”. Se baja el archivo KOBRIX.zip (61 MB) a tu carpeta Descargas. Espera a que termine.</p>
+            <span class="tip" id="g-tip">Si tu navegador pregunta qué hacer con el archivo, elige “Guardar” o “Conservar”.</span>
+          </div>
+          <div class="g-nav">
+            <span class="pos" id="g-pos">Paso 1 de 7</span>
+            <button type="button" class="btn sm" id="g-prev">← Anterior</button>
+            <button type="button" class="btn gold sm" id="g-next">Siguiente →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="descargar" style="padding-top:0">
+    <div class="wrap">
+      <div class="dl">
+        <div class="dl-in">
+          <div class="dl-copy">
+            <span class="eyebrow">Descarga</span>
+            <h2><span class="chrome-text">KOBRIX</span> <span class="gold-text">2.0.4</span><br><span class="chrome-text">para Windows</span></h2>
+            <div class="dl-meta">
+              <span class="chip">Paquete <b>.zip</b></span>
+              <span class="chip"><b>61 MB</b></span>
+              <span class="chip">Windows <b>7 SP1 a 11</b></span>
+              <span class="chip"><b>32 y 64</b> bits</span>
+            </div>
+            <div class="cta-row">
+              <!-- Pon el enlace del instalador en DOWNLOAD_URL, al final de esta página -->
+              <a class="btn gold" id="dl-btn" href="#descargar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                Descargar KOBRIX 2.0.4
+              </a>
+              <a class="btn" href="#instalar">Cómo instalarlo</a>
+            </div>
+            <p class="dl-note" id="dl-note">Se descarga KOBRIX.zip. Clic derecho &gt; Extraer todo y abre KOBRIX-Instalador-2.0.4.exe. <a href="#instalar" style="color:var(--gold)">Ver la guía con imágenes</a>.</p>
+          </div>
+          <div class="news">
+            <div class="h"><b>Novedades de la 2.0.4</b><span class="chip" style="padding:6px 9px">21 oct 2026</span></div>
+            <ul>
+              <li><span>Ventas en espera con <span class="kbd">F2</span>: cobra a otro cliente y regresa a la venta.</span></li>
+              <li><span>Excel de lo vendido por día o por fechas, en piezas y en kilos.</span></li>
+              <li><span>El logo de tu negocio en el ticket.</span></li>
+              <li><span>Corte de caja e impresión para todos los usuarios, con corte parcial.</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="#inicio" aria-label="KOBRIX, inicio"><img class="k" src="k-mark.png" alt="" style="height:24px"><img class="w" src="wordmark.png" alt="KOBRIX"></a>
+      <img class="tg" src="tagline.png" alt="Punto de venta">
+    </div>
+    <span>© 2026 KOBRIX · Punto de venta para Windows</span>
+  </div>
+</footer>
+
+<script>
+// Enlace del instalador. Déjalo vacío mientras no esté publicado.
+var DOWNLOAD_URL = 'https://drive.usercontent.google.com/download?id=1koRv7JO_7c3BX_w-8I6xIIHyyUOWgp4S&export=download&confirm=t';
+
+(function () {
+  var KEYS = {
+    F12: { cat: 'Cobro', title: 'Cobrar', text: 'Abre la ventana de cobro con el total, pide con cuánto paga el cliente y calcula el cambio. Ahí mismo F1 registra e imprime el ticket, F2 solo registra y F3 aplica un descuento.', alt: 'También: Ctrl + Enter', lvl: 3 },
+    F2: { cat: 'Venta', title: 'Venta en espera', text: 'El cliente fue por otro producto: su venta queda guardada y el ticket vacío para cobrarle al siguiente. Con el ticket vacío, F2 otra vez regresa a la venta en espera.', alt: 'También: Ctrl + E', lvl: 4 },
+    F10: { cat: 'Productos', title: 'Buscar producto', text: 'Busca por nombre mientras escribes, sin importar acentos: “jabon” encuentra “Jabón”. Las flechas eligen y Enter lo agrega al ticket.', alt: 'También: Ctrl + B', lvl: 2 },
+    F8: { cat: 'Caja', title: 'Corte de caja', text: 'Fondo inicial, ventas por forma de pago, entradas, salidas y cuánto debe haber. Cuenta billetes y monedas, y F5 imprime un corte parcial sin cerrar.', alt: 'Lo puede hacer cualquier usuario', lvl: 5 },
+    F9: { cat: 'Venta', title: 'Artículo común', text: 'Para algo que no está en el inventario: escribe el nombre y el precio, y se cobra en el mismo ticket.', alt: 'Ideal para bolsas, recargas o servicios', lvl: 2 },
+    F3: { cat: 'Venta', title: 'Devolución o cancelación', text: 'Busca el ticket por su número, elige qué se devuelve y si regresa al inventario. Si el cajero no tiene permiso, se pide el PIN del administrador.', alt: 'Queda en la bitácora', lvl: 3 },
+    plus: { cat: 'Ticket', title: 'Una pieza más o una menos', text: 'Cambia la cantidad del renglón seleccionado sin tocar el ratón. Supr quita el renglón y F4 vacía el ticket.', alt: 'Flechas ↑ ↓ para moverte', lvl: 1 },
+    F5: { cat: 'Tickets', title: 'Reimprimir el último ticket', text: 'Vuelve a imprimir el ticket de la última venta, marcado como reimpresión.', alt: 'También: Ctrl + P', lvl: 1 },
+    mult: { cat: 'Escáner', title: 'Varias piezas de una vez', text: 'Escribe 6* antes de escanear y se agregan 6 piezas del producto. Si alcanzan el mayoreo, el precio cambia solo.', alt: 'Ejemplo: 6*7501055300846', lvl: 2 },
+    kg: { cat: 'Granel', title: 'Venta a granel', text: 'Escribe .5 para medio kilo, 1 para un kilo o 250g para 250 gramos. También el importe: 20 pesos de queso y KOBRIX calcula el peso.', alt: 'El precio por kilo se puede ajustar en la venta', lvl: 3 },
+  };
+  var keys = document.querySelectorAll('.key');
+  var $ = function (id) { return document.getElementById(id); };
+  var bars = document.querySelectorAll('.readout .bars i');
+  function show(k) {
+    var d = KEYS[k];
+    if (!d) return;
+    keys.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.k === k ? 'true' : 'false'); });
+    var label = document.querySelector('.key[data-k="' + k + '"] span').textContent;
+    $('r-key').textContent = label;
+    $('r-cat').textContent = d.cat;
+    $('r-title').textContent = d.title;
+    $('r-text').textContent = d.text;
+    $('r-alt').textContent = d.alt;
+    bars.forEach(function (b, i) { b.className = i < d.lvl * 2 ? 'on' : ''; });
+  }
+  keys.forEach(function (b) {
+    b.addEventListener('click', function () { show(b.dataset.k); });
+    b.addEventListener('mouseenter', function () { if (window.matchMedia('(hover: hover)').matches) show(b.dataset.k); });
+  });
+  show('F12');
+
+  // Recorrido por pantallas
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var img = $('viewer-img');
+  function pick(t, focus) {
+    tabs.forEach(function (x) { x.setAttribute('aria-selected', x === t ? 'true' : 'false'); x.tabIndex = x === t ? 0 : -1; });
+    img.style.opacity = '0.25';
+    var next = new Image();
+    next.onload = next.onerror = function () { img.src = t.dataset.img; img.alt = 'Pantalla de KOBRIX: ' + t.querySelector('b').textContent; img.style.opacity = '1'; };
+    next.src = t.dataset.img;
+    $('viewer-cap').textContent = t.dataset.cap;
+    $('viewer').setAttribute('aria-labelledby', t.id);
+    if (focus) t.focus();
+  }
+  tabs.forEach(function (t, i) {
+    t.tabIndex = i === 0 ? 0 : -1;
+    t.addEventListener('click', function () { pick(t); });
+    t.addEventListener('keydown', function (e) {
+      var n = tabs.length, j = -1;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') j = (i + 1) % n;
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') j = (i - 1 + n) % n;
+      if (j >= 0) { e.preventDefault(); pick(tabs[j], true); }
+    });
+  });
+
+  // Botón de descarga
+  var btn = $('dl-btn');
+  if (DOWNLOAD_URL) { btn.href = DOWNLOAD_URL; btn.target = '_blank'; btn.rel = 'noopener'; }
+  else btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    var note = $('dl-note');
+    note.textContent = 'La descarga estará disponible muy pronto. Pide el instalador a tu distribuidor KOBRIX.';
+    note.setAttribute('data-tone', 'info');
+  });
+
+  // Color de acento: aplica a toda la página y se recuerda en este navegador
+  var NAMES = { champagne: 'Champán', platino: 'Platino', jade: 'Jade', zafiro: 'Zafiro', rubi: 'Rubí' };
+  var accBtns = document.querySelectorAll('[data-accent]:not(html)');
+  function setAccent(a, save) {
+    if (!NAMES[a]) a = 'champagne';
+    if (a === 'champagne') document.documentElement.removeAttribute('data-accent');
+    else document.documentElement.setAttribute('data-accent', a);
+    accBtns.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.accent === a ? 'true' : 'false'); });
+    $('acc-name').textContent = NAMES[a];
+    if (save) { try { localStorage.setItem('kobrix.acento', a); } catch (e) { /* sin almacenamiento */ } }
+  }
+  accBtns.forEach(function (b) { b.addEventListener('click', function () { setAccent(b.dataset.accent, true); }); });
+  var saved = null;
+  try { saved = localStorage.getItem('kobrix.acento'); } catch (e) { saved = null; }
+  setAccent(saved || 'champagne', false);
+
+  // Guía ilustrada de instalación
+  var GUIDE = [
+    { t: 'Descarga KOBRIX', x: 'Da clic en “Descargar KOBRIX 2.0.4”. Se baja el archivo KOBRIX.zip (61 MB) a tu carpeta Descargas. Espera a que termine.', tip: 'Si tu navegador pregunta qué hacer con el archivo, elige “Guardar” o “Conservar”.' },
+    { t: 'Clic derecho › Extraer todo', x: 'Abre tu carpeta Descargas (o da clic en “Mostrar en la carpeta”). Da clic derecho sobre KOBRIX.zip y elige “Extraer todo…”.', tip: 'Windows ya sabe abrir archivos .zip, no necesitas WinRAR. Si tienes WinRAR o 7-Zip, también sirve: clic derecho › “Extraer aquí”.' },
+    { t: 'Pulsa Extraer', x: 'Deja la carpeta que propone Windows y deja marcada la casilla “Mostrar los archivos extraídos al terminar”. Da clic en “Extraer”.', tip: 'No abras el instalador desde dentro del .zip sin extraerlo: primero extrae, así no falta ningún archivo.' },
+    { t: 'Abre el instalador', x: 'Se abre la carpeta extraída. Entra a la carpeta KOBRIX y da doble clic en “KOBRIX-Instalador-2.0.4” (el del icono de KOBRIX).', tip: 'También vienen LEEME.txt con todas las instrucciones y la carpeta Capturas.' },
+    { t: 'Aviso de Windows: es normal', x: 'Si aparece “Windows protegió su PC”, da clic en “Más información” y luego en “Ejecutar de todas formas”.', tip: 'Windows lo muestra con los programas nuevos que no tienen firma digital. El instalador no pide permisos de administrador.' },
+    { t: 'Sigue el instalador', x: 'Da clic en “Siguiente”, después en “Instalar” y al final en “Terminar”. Tarda menos de un minuto.', tip: 'Si ya tenías KOBRIX, se actualiza solo y conservas tus ventas, productos, usuarios y licencia.' },
+    { t: '¡Listo! Abre KOBRIX', x: 'En tu escritorio aparece el icono de KOBRIX. Ábrelo con doble clic: un asistente te pide el nombre de tu negocio, tu PIN y tus cajeros.', tip: 'Tienes 15 días de prueba con todas las funciones. Anota el código de recuperación que te muestra al final.' },
+  ];
+  var gSteps = Array.prototype.slice.call(document.querySelectorAll('.g-step'));
+  var scenes = document.querySelectorAll('.scene');
+  var gi = 0;
+  function gShow(i, focus) {
+    gi = Math.max(0, Math.min(GUIDE.length - 1, i));
+    gSteps.forEach(function (b, j) { b.setAttribute('aria-selected', j === gi ? 'true' : 'false'); b.tabIndex = j === gi ? 0 : -1; b.classList.toggle('done', j < gi); });
+    scenes.forEach(function (s) { s.hidden = Number(s.dataset.scene) !== gi; });
+    $('g-title').textContent = (gi + 1) + '. ' + GUIDE[gi].t;
+    $('g-text').textContent = GUIDE[gi].x;
+    $('g-tip').textContent = GUIDE[gi].tip;
+    $('g-pos').textContent = 'Paso ' + (gi + 1) + ' de ' + GUIDE.length;
+    $('g-prev').disabled = gi === 0;
+    $('g-next').textContent = gi === GUIDE.length - 1 ? 'Volver al inicio ↺' : 'Siguiente →';
+    if (focus) gSteps[gi].focus();
+  }
+  gSteps.forEach(function (b, j) {
+    b.addEventListener('click', function () { gShow(j); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); gShow(j + 1 < GUIDE.length ? j + 1 : 0, true); }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); gShow(j > 0 ? j - 1 : GUIDE.length - 1, true); }
+    });
+  });
+  $('g-prev').addEventListener('click', function () { gShow(gi - 1); });
+  $('g-next').addEventListener('click', function () { gShow(gi === GUIDE.length - 1 ? 0 : gi + 1); });
+  gShow(0);
+
+  // Filo del encabezado al bajar
+  var top = $('top');
+  function onScroll() { top.classList.toggle('scrolled', window.scrollY > 8); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+
+</body>
+</html>
